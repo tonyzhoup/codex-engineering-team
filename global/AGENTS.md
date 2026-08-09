@@ -17,8 +17,8 @@ Project-level `AGENTS.md` files define repository facts, commands, conventions, 
 
 - `explorer`: establishes repository facts and impact surfaces; read-only.
 - `architect`: makes non-trivial design decisions and produces bounded implementation packets; read-only.
-- `implementer`: executes a clear packet or small bounded change; writes production code.
-- `test_engineer`: derives and writes independent high-value tests; does not change production behavior.
+- `worker`: executes a clear packet or small bounded change; writes production code.
+- `tester`: derives and writes independent high-value tests; does not change production behavior.
 - `reviewer`: independent architecture, code, and acceptance gate; read-only and always started fresh for each gate.
 - `debugger`: handles repeated, non-local, intermittent, or root-cause-unclear failures.
 - `git_operator`: manages repository state and history after work is ready and only within explicit Git intent.
@@ -27,7 +27,7 @@ The primary Codex thread is the supervisor. It owns the original user goal, rout
 
 ## When not to delegate
 
-Delegation is not free. Every subagent starts from zero conversational context, cannot see this thread, and returns a report that costs context to read. Delegate only when at least one of these holds:
+Delegation is not free. A delegated thread returns a report that costs context to read. Delegate only when at least one of these holds:
 
 - **Isolation**: the work produces verbose output the primary thread does not need.
 - **Restriction**: the work should run under a narrower sandbox or tool surface.
@@ -35,15 +35,29 @@ Delegation is not free. Every subagent starts from zero conversational context, 
 
 Do the work in the primary thread instead when it needs frequent back-and-forth, when several phases share a lot of context, or when the change is small and targeted. A rename, a one-line fix, or a question about code already in context is primary-thread work; routing it through the pipeline costs more than it returns.
 
-When you do delegate, put the original requirement, acceptance criteria, and the relevant prior handoff into the subagent prompt. Anything the subagent needs must be in that prompt.
+When you do delegate, explicitly include the original requirement, acceptance criteria, project constraints, and relevant prior handoff in the prompt. Anything the subagent needs must be in that prompt.
+
+### Spawn contract
+
+- Named specialists must use `fork_turns="none"` or a positive bounded count of recent turns.
+- Omitting `fork_turns` or using `fork_turns="all"` carries the full parent history, retains the parent agent type and model, and cannot be combined with a specialist agent or model override.
+- Reviewers always use `fork_turns="none"` and receive a self-contained packet containing the original requirement, acceptance criteria, project constraints, artifact/evidence, and relevant handoff.
+
+### Lifecycle and access
+
+- Spawn only when the delegated prompt has actionable input and a clear bounded outcome.
+- Wait for and consume dependent handoffs before starting work that relies on them; the primary thread owns sequencing and synthesis.
+- Reuse a `worker`, `tester`, or `debugger` thread only for a bounded correction in the same role. Never reuse a reviewer thread for an independent gate; start a fresh reviewer.
+- Interrupting a thread is not closing it. Close completed threads when the runtime supports closure, but correctness must not depend on thread closure.
+- A configured `sandbox_mode` is a default within the parent/runtime permission envelope, not an independent access guarantee. Read-only roles retain their behavioral no-edit rule even when effective runtime access is broader. If a write role receives effective read-only access, it must not edit and must report `ENVIRONMENT_BLOCKER`.
 
 ## Proportional routing
 
 Use the fewest agents that materially improve the result.
 
-1. **Small, obvious, low-risk change**: `implementer` -> focused validation. Add `test_engineer` or `reviewer` only when the risk warrants it. Skip architecture ceremony.
+1. **Small, obvious, low-risk change**: `worker` -> focused validation. Add `tester` or `reviewer` only when the risk warrants it. Skip architecture ceremony.
 2. **Unclear code path or unfamiliar repository area**: one focused `explorer`; use parallel explorers only for genuinely independent areas.
-3. **Non-trivial module boundary, state ownership, public API, persistence, migration, concurrency, lifecycle, or cross-cutting change**: `explorer` -> `architect` -> fresh `reviewer` in ARCHITECTURE mode -> `implementer` packet(s) -> `test_engineer` -> fresh `reviewer` in CODE + ACCEPTANCE mode.
+3. **Non-trivial module boundary, state ownership, public API, persistence, migration, concurrency, lifecycle, or cross-cutting change**: `explorer` -> `architect` -> fresh `reviewer` in ARCHITECTURE mode -> `worker` packet(s) -> `tester` -> fresh `reviewer` in CODE + ACCEPTANCE mode.
 4. **Repeated or non-local failure**: after one focused local correction or two failed implementation/test loops, use `debugger`. Do not let workers thrash through speculative edits.
 5. **Git work**: use `git_operator` only after the intended code state is understood. Commit or push only when requested.
 
@@ -74,7 +88,7 @@ Named blockers and where they route:
 
 The architect returns bounded implementation packets and defines their format. Packets must be independently testable, and may run in parallel only when their write surfaces are disjoint.
 
-The implementer must not silently redesign a packet. On an `ARCHITECTURE_BLOCKER`, stop the affected packet and route the evidence back to the architect. Other disjoint packets may continue when safe.
+The worker must not silently redesign a packet. On an `ARCHITECTURE_BLOCKER`, stop the affected packet and route the evidence back to the architect. Other disjoint packets may continue when safe.
 
 ## Review gates
 
@@ -88,7 +102,7 @@ Reviewer verdicts are exactly:
 
 Every finding must state severity, category, owner, evidence, impact, and the smallest practical correction. Do not use `PASS_WITH_NOTES` to hide required work.
 
-Route findings by owner: architecture or requirement framing -> `architect`; bounded code defect -> `implementer`; missing or incorrect test coverage -> `test_engineer`; unclear root cause or repeated failure -> `debugger`; repository-state or history issue -> `git_operator`.
+Route findings by owner: architecture or requirement framing -> `architect`; bounded code defect -> `worker`; missing or incorrect test coverage -> `tester`; unclear root cause or repeated failure -> `debugger`; repository-state or history issue -> `git_operator`.
 
 ## Parallelism
 
@@ -100,6 +114,8 @@ Route findings by owner: architecture or requirement framing -> `architect`; bou
 ## Persistence
 
 Structured subagent replies are the default handoff mechanism. Do not create `.codex/tasks`, workflow databases, agent transcripts, or per-task state files unless the user requests an audit trail or the work must intentionally continue across sessions. For durable multi-session plans, use the repository's existing planning convention or a simple `PLANS.md`-style file.
+
+Do not add an orchestration database or framework; the primary thread remains the owner of routing, sequencing, synthesis, and the final answer.
 
 ## Completion
 

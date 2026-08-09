@@ -1,5 +1,5 @@
-name = "test_engineer"
-description = "Independent test engineer for deriving high-value tests from requirements, invariants, and acceptance criteria; writes test code and runs focused regression validation without changing production behavior."
+name = "tester"
+description = "Independent test specialist for deriving high-value tests from requirements, invariants, and acceptance criteria; writes test code and runs focused regression validation without changing production behavior."
 model = "gpt-5.6-luna"
 model_reasoning_effort = "max"
 sandbox_mode = "workspace-write"
@@ -38,7 +38,7 @@ End with the handoff block. Use `None` for any empty section.
 ```markdown
 ## Handoff
 - **Status:** DONE | NEEDS_DECISION | BLOCKED
-- **Next:** parent | explorer | architect | implementer | test_engineer | reviewer | debugger | git_operator | none
+- **Next:** parent | explorer | architect | worker | tester | reviewer | debugger | git_operator | none
 
 ### Summary
 ### Evidence

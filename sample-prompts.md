@@ -6,11 +6,11 @@ Summarize the active engineering-team routing, shared handoff contract, and avai
 
 ## Full feature workflow
 
-Implement <feature>. Preserve the original requirement through every handoff. Use the fewest useful agents: focused explorer work if the path is unclear; architect only if the change crosses a real architecture boundary; a fresh architecture reviewer before implementation; disjoint Luna Max implementers only from explicit packets; test_engineer for independent behavioral coverage; and a fresh CODE+ACCEPTANCE reviewer before declaring completion. Do not commit.
+Implement <feature>. Preserve the original requirement through every handoff. Use the fewest useful agents: focused explorer work if the path is unclear; architect only if the change crosses a real architecture boundary; a fresh architecture reviewer before implementation; disjoint Luna Max workers only from explicit packets; tester for independent behavioral coverage; and a fresh CODE+ACCEPTANCE reviewer before declaring completion. Do not commit.
 
 ## Small bug fix
 
-Fix <bug>. Keep the process proportional: use explorer only if the responsible path is unclear, implementer for the smallest fix, test_engineer for a high-value regression test, and reviewer only for material risk. Escalate after repeated/non-local failure rather than making speculative edits. Do not commit.
+Fix <bug>. Keep the process proportional: use explorer only if the responsible path is unclear, worker for the smallest fix, tester for a high-value regression test, and reviewer only for material risk. Escalate after repeated/non-local failure rather than making speculative edits. Do not commit.
 
 ## Architecture-only task
 
