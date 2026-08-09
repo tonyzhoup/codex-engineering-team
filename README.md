@@ -1,6 +1,6 @@
 # Codex Engineering Team
 
-**Version 1.2** — adds a real global operating agreement and explicit handoff/input/output contracts for all seven agents.
+**Version 1.2.1** — adds a `When not to delegate` rule, pairs each named blocker with the role it routes to, and moves the handoff and packet templates into the agent definitions that produce them, so `--agents-only` installs stay correct.
 
 A deliberately small Codex subagent team optimized for **simple, long-lived, robust, elegant engineering without over-design**.
 
@@ -24,16 +24,18 @@ The primary Codex thread is the supervisor. There is no permanent supervisor age
 
 ```text
 ~/.codex/
-├── AGENTS.md          # team routing, shared handoff envelope, gates, escalation
-├── agents/            # each role's authority, expected input, and required output
-│   └── *.toml
+├── AGENTS.md          # when to delegate, routing, gates, escalation, done criteria
+├── agents/            # each role's authority, expected input, and output spec
+│   └── *.toml         #   (handoff / packet templates live here)
 └── config.toml        # multi-agent runtime settings
 
 <repo>/
 └── AGENTS.md          # repo layout, commands, conventions, constraints, done criteria
 ```
 
-The global file says **how the team collaborates**. Each TOML says **how that role works**. A repository `AGENTS.md` says **how this codebase works**.
+The global file says **how the team collaborates**. Each TOML says **how that role works and what shape it emits**. A repository `AGENTS.md` says **how this codebase works**.
+
+Contracts are split by who needs them: routing, gates, and the delegation rule stay global because the primary thread uses them; the handoff and packet templates are output specs, so they live with the roles that produce them. A side effect is that `--agents-only` installs still emit correctly formatted handoffs.
 
 Handoffs remain in the subagent response by default. Do not create per-task files unless you intentionally need cross-session persistence or an audit trail.
 

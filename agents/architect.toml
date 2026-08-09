@@ -35,7 +35,40 @@ At most two meaningful alternatives.
 ### Acceptance criteria
 
 ## Implementation Packets
-Use the shared packet format exactly. Every packet must include `Goal`, `Depends on`, `Write surface`, `Instructions`, `Invariants`, `Acceptance`, and `Escalate if`. Keep packets coherent, independently testable, and parallel only when write surfaces are disjoint.
+One or more packets in exactly this format:
 
-Then end with the shared `## Handoff` contract. Its required fields are `Status`, `Next`, `Summary`, `Evidence`, `Decisions`, `Changes`, `Risks`, `Blockers`, and `Next action`; use `None` for empty sections. Use `NEEDS_DECISION` only for a real unresolved product/architecture choice; do not manufacture options when one simple solution is clearly best.
+```markdown
+### Packet P1 — <name>
+- **Goal:** one bounded outcome
+- **Depends on:** None | packet IDs
+- **Write surface:** expected files/directories; packets may run in parallel only when these surfaces do not overlap
+- **Instructions:** the smallest design-consistent change
+- **Invariants:** properties that must remain true
+- **Acceptance:** observable checks for this packet
+- **Escalate if:** conditions that require architect/debugger/parent judgment
+```
+
+Keep packets coherent and independently testable, and as small as practical without fragmenting one coherent change. Do not create generic frameworks or extension points merely to make packets look reusable.
+
+End with the handoff block. Use `None` for any empty section.
+
+```markdown
+## Handoff
+- **Status:** DONE | NEEDS_DECISION | BLOCKED
+- **Next:** parent | explorer | architect | implementer | test_engineer | reviewer | debugger | git_operator | none
+
+### Summary
+### Evidence
+Concrete paths, symbols, commands, and results — not raw logs.
+### Decisions
+### Changes
+Files or repository state changed; `None` if you changed nothing.
+### Risks
+### Blockers
+`None`, or a named blocker with the minimum decision or evidence needed to proceed.
+### Next action
+One specific recommended next step.
+```
+
+Use `NEEDS_DECISION` only for a real unresolved product/architecture choice; do not manufacture options when one simple solution is clearly best.
 """

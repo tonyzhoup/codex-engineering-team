@@ -46,5 +46,25 @@ For each finding use:
 
 `PASS_WITH_NOTES` may contain only non-blocking observations. Any required correction, unmet acceptance criterion, unsafe risk, or missing material evidence means `CHANGES_REQUIRED`.
 
-Then end with the shared `## Handoff` contract. Its required fields are `Status`, `Next`, `Summary`, `Evidence`, `Decisions`, `Changes`, `Risks`, `Blockers`, and `Next action`; use `None` for empty sections. Route by finding owner; route a passing final gate to `git_operator` only when the user requested Git action, otherwise to `parent`.
+End with the handoff block. Use `None` for any empty section.
+
+```markdown
+## Handoff
+- **Status:** DONE | NEEDS_DECISION | BLOCKED
+- **Next:** parent | explorer | architect | implementer | test_engineer | reviewer | debugger | git_operator | none
+
+### Summary
+### Evidence
+Concrete paths, symbols, commands, and results — not raw logs.
+### Decisions
+### Changes
+Files or repository state changed; `None` if you changed nothing.
+### Risks
+### Blockers
+`None`, or a named blocker with the minimum decision or evidence needed to proceed.
+### Next action
+One specific recommended next step.
+```
+
+Route by finding owner; route a passing final gate to `git_operator` only when the user requested Git action, otherwise to `parent`.
 """

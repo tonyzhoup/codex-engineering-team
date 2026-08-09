@@ -25,6 +25,18 @@ Project-level `AGENTS.md` files define repository facts, commands, conventions, 
 
 The primary Codex thread is the supervisor. It owns the original user goal, routing, synthesis, and final answer. Subagents do not pass work directly to one another; they return a structured handoff to the primary thread, which decides the next step.
 
+## When not to delegate
+
+Delegation is not free. Every subagent starts from zero conversational context, cannot see this thread, and returns a report that costs context to read. Delegate only when at least one of these holds:
+
+- **Isolation**: the work produces verbose output the primary thread does not need.
+- **Restriction**: the work should run under a narrower sandbox or tool surface.
+- **Model tier**: the work belongs on a stronger or cheaper model than the primary thread.
+
+Do the work in the primary thread instead when it needs frequent back-and-forth, when several phases share a lot of context, or when the change is small and targeted. A rename, a one-line fix, or a question about code already in context is primary-thread work; routing it through the pipeline costs more than it returns.
+
+When you do delegate, put the original requirement, acceptance criteria, and the relevant prior handoff into the subagent prompt. Anything the subagent needs must be in that prompt.
+
 ## Proportional routing
 
 Use the fewest agents that materially improve the result.
@@ -35,36 +47,9 @@ Use the fewest agents that materially improve the result.
 4. **Repeated or non-local failure**: after one focused local correction or two failed implementation/test loops, use `debugger`. Do not let workers thrash through speculative edits.
 5. **Git work**: use `git_operator` only after the intended code state is understood. Commit or push only when requested.
 
-## Shared handoff contract
+## Handoffs
 
-Every subagent final response must end with this compact block. Use `None` rather than omitting a section.
-
-```markdown
-## Handoff
-- **Status:** DONE | NEEDS_DECISION | BLOCKED
-- **Next:** parent | explorer | architect | implementer | test_engineer | reviewer | debugger | git_operator | none
-
-### Summary
-What this agent completed or established.
-
-### Evidence
-Concrete files, symbols, commands, test results, or observed behavior. Do not include raw logs when a concise result is sufficient.
-
-### Decisions
-Decisions made within this role's authority.
-
-### Changes
-Files or repository state changed; `None` for read-only work.
-
-### Risks
-Material residual risks or uncertainty.
-
-### Blockers
-`None`, or a named blocker with the minimum decision/evidence needed to proceed.
-
-### Next action
-One specific recommended next step.
-```
+Every subagent ends its final response with a `## Handoff` block; each agent definition carries the exact shape. Read it to decide the next step.
 
 Status semantics:
 
@@ -72,11 +57,11 @@ Status semantics:
 - `NEEDS_DECISION`: progress requires a scope, requirement, or architecture decision from the primary thread or architect.
 - `BLOCKED`: progress is prevented by missing access, environment, tools, reproducibility, or another external condition.
 
-Use these blocker names when applicable:
+Named blockers and where they route:
 
-- `ARCHITECTURE_BLOCKER`: safe implementation requires changing a public contract, module boundary, state owner, persistence model, concurrency/lifecycle model, dependency policy, or approved invariant.
-- `DEBUG_BLOCKER`: the failure is repeated, non-local, intermittent, or lacks a proven root cause.
-- `ENVIRONMENT_BLOCKER`: required commands, dependencies, access, or runtime conditions are unavailable.
+- `ARCHITECTURE_BLOCKER` -> `architect`: safe implementation requires changing a public contract, module boundary, state owner, persistence model, concurrency/lifecycle model, dependency policy, or approved invariant.
+- `DEBUG_BLOCKER` -> `debugger`: the failure is repeated, non-local, intermittent, or lacks a proven root cause.
+- `ENVIRONMENT_BLOCKER` -> parent: required commands, dependencies, access, or runtime conditions are unavailable.
 
 ## Evidence rules
 
@@ -87,26 +72,13 @@ Use these blocker names when applicable:
 
 ## Architecture-to-implementation contract
 
-For non-trivial work, the architect returns one or more packets in this form:
-
-```markdown
-### Packet P1 — <name>
-- **Goal:** one bounded outcome
-- **Depends on:** None | packet IDs
-- **Write surface:** expected files/directories; packets may run in parallel only when these surfaces do not overlap
-- **Instructions:** the smallest design-consistent change
-- **Invariants:** properties that must remain true
-- **Acceptance:** observable checks for this packet
-- **Escalate if:** conditions that require architect/debugger/parent judgment
-```
-
-Packets should be independently testable and as small as practical without fragmenting one coherent change. Do not create generic frameworks or extension points merely to make packets look reusable.
+The architect returns bounded implementation packets and defines their format. Packets must be independently testable, and may run in parallel only when their write surfaces are disjoint.
 
 The implementer must not silently redesign a packet. On an `ARCHITECTURE_BLOCKER`, stop the affected packet and route the evidence back to the architect. Other disjoint packets may continue when safe.
 
 ## Review gates
 
-Use a fresh `reviewer` session for each independent gate.
+Use a fresh `reviewer` session for each independent gate; a gate is independent only if it starts with a clean context.
 
 Reviewer verdicts are exactly:
 
@@ -116,13 +88,7 @@ Reviewer verdicts are exactly:
 
 Every finding must state severity, category, owner, evidence, impact, and the smallest practical correction. Do not use `PASS_WITH_NOTES` to hide required work.
 
-Route findings by owner:
-
-- architecture or requirement framing -> `architect`
-- bounded code defect -> `implementer`
-- missing or incorrect test coverage -> `test_engineer`
-- unclear root cause or repeated failure -> `debugger`
-- repository-state/history issue -> `git_operator`
+Route findings by owner: architecture or requirement framing -> `architect`; bounded code defect -> `implementer`; missing or incorrect test coverage -> `test_engineer`; unclear root cause or repeated failure -> `debugger`; repository-state or history issue -> `git_operator`.
 
 ## Parallelism
 
