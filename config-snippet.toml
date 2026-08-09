@@ -1,0 +1,7 @@
+# Merge this table into ~/.codex/config.toml or a trusted project .codex/config.toml.
+# Custom agent files pin their own models and reasoning efforts.
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 6
+interrupt_message = true

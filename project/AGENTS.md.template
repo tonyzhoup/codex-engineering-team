@@ -1,0 +1,54 @@
+# Project Engineering Instructions
+
+Keep this file short and factual. The global engineering-team `AGENTS.md` supplies agent routing and handoff rules; this file supplies repository-specific truth.
+
+## Product and architecture
+
+- Purpose: <one paragraph>
+- Primary architecture: <key components and boundaries>
+- Sources of truth: <important state ownership>
+- Non-negotiable constraints: <compatibility, security, deployment, data, platform>
+
+## Repository map
+
+- `<path>`: <responsibility>
+- `<path>`: <responsibility>
+- `<path>`: <responsibility>
+
+## Build, test, and lint
+
+- Install: `<command>`
+- Build: `<command>`
+- Unit tests: `<command>`
+- Integration tests: `<command>`
+- Lint/type check: `<command>`
+- Format check: `<command>`
+
+Use the narrowest relevant command first. State any required services, environment variables, fixtures, or platform restrictions.
+
+## Engineering conventions
+
+- <language/framework conventions that are not obvious from the code>
+- <error handling and logging expectations>
+- <API/data compatibility rules>
+- <dependency policy>
+
+## Guardrails
+
+- Do not <project-specific prohibited action>.
+- Preserve <important invariant>.
+- Ask for a design decision before <project-specific boundary change>.
+
+## Definition of done
+
+- Requested observable behavior works.
+- Relevant tests and checks pass, or unavailable checks are explicitly reported.
+- No unrelated refactor or dependency was introduced.
+- Public/API/data compatibility requirements are met.
+- Material reviewer findings are resolved.
+
+## Code review rules
+
+- Flag <project-specific correctness or security concern>.
+- Verify <important behavior or invariant>.
+- Ignore formatting issues already enforced by CI unless they reveal a real defect.
