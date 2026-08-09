@@ -4,6 +4,8 @@
 
 A deliberately small Codex subagent team optimized for **simple, long-lived, robust, elegant engineering without over-design**.
 
+> Using Claude Code instead? [**claude-engineering-team**](https://github.com/tonyzhoup/claude-engineering-team) is the same team contract, handoff envelope, and packet format ported to Claude Code subagents.
+
 ## Team
 
 | Agent | Model / effort | Access | Responsibility |
