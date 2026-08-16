@@ -33,7 +33,7 @@ Delegation is not free. A delegated thread returns a report that costs context t
 - **Restriction**: the work should run under a narrower sandbox or tool surface.
 - **Model tier**: the work belongs on a stronger or cheaper model than the primary thread.
 
-Do the work in the primary thread instead when it needs frequent back-and-forth, when several phases share a lot of context, or when the change is small and targeted. A rename, a one-line fix, or a question about code already in context is primary-thread work; routing it through the pipeline costs more than it returns.
+Do the work in the primary thread instead when it needs frequent back-and-forth, when several phases share a lot of context, or when the change is small and targeted and the primary thread already has the necessary context. A rename, a one-line fix, or a question about code already in context is primary-thread work. Delegate a small bounded change only when the isolation, restriction, or model-tier benefit is expected to exceed the prompt and handoff overhead.
 
 When you do delegate, explicitly include the original requirement, acceptance criteria, project constraints, and relevant prior handoff in the prompt. Anything the subagent needs must be in that prompt.
 
@@ -55,9 +55,9 @@ When you do delegate, explicitly include the original requirement, acceptance cr
 
 Use the fewest agents that materially improve the result.
 
-1. **Small, obvious, low-risk change**: `worker` -> focused validation. Add `tester` or `reviewer` only when the risk warrants it. Skip architecture ceremony.
+1. **Small, obvious, low-risk change**: the primary thread implements it directly when it already has the necessary context. Use one `worker` only when the delegation threshold above is met. Run focused validation; add `tester` or `reviewer` only when the risk warrants it. Skip architecture ceremony.
 2. **Unclear code path or unfamiliar repository area**: one focused `explorer`; use parallel explorers only for genuinely independent areas.
-3. **Non-trivial module boundary, state ownership, public API, persistence, migration, concurrency, lifecycle, or cross-cutting change**: `explorer` -> `architect` -> fresh `reviewer` in ARCHITECTURE mode -> `worker` packet(s) -> `tester` -> fresh `reviewer` in CODE + ACCEPTANCE mode.
+3. **Non-trivial module boundary, state ownership, public API, persistence, migration, concurrency, lifecycle, or cross-cutting change**: compose only the gates that the task needs. Use `explorer` when the code path or impact is unclear; `architect` when a real boundary or ownership decision is required; a fresh ARCHITECTURE `reviewer` only for high-risk, hard-to-reverse, or public-contract decisions; `worker` packet(s) for implementation; `tester` when independent tests materially reduce regression risk; and a fresh CODE + ACCEPTANCE `reviewer` for medium/high-risk changes or material acceptance uncertainty. The full pipeline is not the default.
 4. **Repeated or non-local failure**: after one focused local correction or two failed implementation/test loops, use `debugger`. Do not let workers thrash through speculative edits.
 5. **Git work**: use `git_operator` only after the intended code state is understood. Commit or push only when requested.
 
@@ -106,7 +106,7 @@ Route findings by owner: architecture or requirement framing -> `architect`; bou
 
 ## Parallelism
 
-- Parallelize read-only exploration freely only when scopes are independent.
+- Parallelize read-only exploration only when scopes are independent and the expected latency or evidence benefit exceeds the delegation and synthesis cost.
 - Parallelize write agents only from explicit packets with disjoint write surfaces and no hidden ordering dependency.
 - Prefer two well-scoped workers over a large worker pool. Avoid concurrent edits to the same file.
 - If integration becomes the dominant complexity, stop parallelizing and use one owner.

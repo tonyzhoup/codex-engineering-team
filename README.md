@@ -88,7 +88,7 @@ The snippet explicitly selects the official Multi-agent V2 runtime, enables the 
 
 ## Intended workflow
 
-For a non-trivial change:
+Compose the workflow from only the gates that materially improve the result. Use the full pipeline only for a high-risk change where every gate is justified:
 
 ```text
 Explorer(s)
@@ -100,7 +100,7 @@ Explorer(s)
   -> Git Operator only when requested
 ```
 
-For a small obvious change, skip architecture and use only the minimum useful roles.
+For a small obvious change, the primary thread should implement it directly when it already has the necessary context. Use one `worker` only when isolation, restriction, or model-tier savings outweigh the prompt and handoff overhead. For non-trivial work, add exploration, architecture, independent testing, and review conditionally according to uncertainty, reversibility, public-contract impact, regression risk, and acceptance risk; the full pipeline is not the default.
 
 ## Handoff design
 

@@ -217,6 +217,10 @@ check_documented_runtime_semantics() {
   assert_contains 'Multi-agent V2 runtime' "$readme"
   assert_contains 'Runtime selection also chooses concurrency' "$readme"
   assert_contains 'concurrency' "$global"
+  assert_contains 'expected to exceed the prompt and handoff overhead' "$global"
+  assert_contains 'compose only the gates that the task needs' "$global"
+  assert_contains 'expected latency or evidence benefit exceeds the delegation and synthesis cost' "$global"
+  assert_contains 'the full pipeline is not the default' "$readme"
 }
 
 check_active_legacy_names_are_bounded() {
