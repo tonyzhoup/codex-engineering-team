@@ -84,7 +84,7 @@ Do not duplicate the global workflow rules in every repository. Keep project ins
 
 Merge `config-snippet.toml` into `~/.codex/config.toml` or a trusted project's `.codex/config.toml`. The package does not overwrite config automatically.
 
-The snippet enables the agent runtime and interrupt messages, and sets only the top-level Main `model` and `model_reasoning_effort` defaults. It intentionally leaves subagent default model/effort keys and concurrency unset because every custom role pins its own model/effort and the runtime chooses concurrency.
+The snippet explicitly selects the official Multi-agent V2 runtime, enables the agent runtime and interrupt messages, and sets only the top-level Main `model` and `model_reasoning_effort` defaults. It intentionally leaves subagent default model/effort keys and concurrency unset because every custom role pins its own model/effort and the runtime chooses concurrency.
 
 ## Intended workflow
 

@@ -194,10 +194,12 @@ for name, (model, effort, sandbox) in expected.items():
         raise SystemExit(f"{path}: missing developer_instructions")
 
 config = tomllib.loads(config_path.read_text())
-if set(config) != {"model", "model_reasoning_effort", "agents"}:
+if set(config) != {"model", "model_reasoning_effort", "features", "agents"}:
     raise SystemExit(f"config top-level keys: {set(config)!r}")
 if config["model"] != "gpt-5.6-sol" or config["model_reasoning_effort"] != "max":
     raise SystemExit("config Main model/effort are not Sol/max")
+if config["features"] != {"multi_agent_v2": True}:
+    raise SystemExit(f"config feature settings: {config['features']!r}")
 if set(config["agents"]) != {"enabled", "interrupt_message"}:
     raise SystemExit(f"config agent keys: {set(config['agents'])!r}")
 if config["agents"] != {"enabled": True, "interrupt_message": True}:
@@ -212,6 +214,7 @@ check_documented_runtime_semantics() {
   assert_contains 'sandbox_mode' "$global"
   assert_contains 'configured defaults' "$readme"
   assert_contains 'permission envelope' "$readme"
+  assert_contains 'Multi-agent V2 runtime' "$readme"
   assert_contains 'Runtime selection also chooses concurrency' "$readme"
   assert_contains 'concurrency' "$global"
 }
