@@ -57,5 +57,5 @@ Files or repository state changed; `None` if you changed nothing.
 One specific recommended next step.
 ```
 
-Successful fixes normally route to `tester` and then a fresh `reviewer`.
+Successful fixes return to `parent`, route to `tester` for behavioral regression verification, or route to `reviewer` for material non-behavioral risk. Use both only when the change is high-risk and the two gates address distinct material uncertainties.
 """

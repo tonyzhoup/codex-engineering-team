@@ -223,6 +223,39 @@ check_documented_runtime_semantics() {
   assert_contains 'the full pipeline is not the default' "$readme"
 }
 
+check_cost_aware_verification_routing() {
+  local tester="$ROOT_DIR/agents/tester.toml"
+  local debugger="$ROOT_DIR/agents/debugger.toml"
+  local readme="$ROOT_DIR/README.md"
+  local global="$ROOT_DIR/global/AGENTS.md"
+  local prompts="$ROOT_DIR/sample-prompts.md"
+
+  assert_contains 'Independent behavioral verification specialist' "$tester"
+  assert_contains '## Test Result' "$tester"
+  assert_contains '**Verdict:** PASS | FAIL | INCONCLUSIVE' "$tester"
+  assert_contains 'Map each material acceptance criterion' "$tester"
+  assert_contains 'plausible production defect' "$tester"
+  assert_contains 'Apply verdicts in this order: `FAIL`, then `INCONCLUSIVE`, then `PASS`' "$tester"
+  assert_contains '`PASS` only when every material acceptance criterion has sufficient evidence' "$tester"
+  assert_contains '`FAIL` when required observable behavior is disproven' "$tester"
+  assert_contains '`INCONCLUSIVE` when any material acceptance criterion lacks sufficient evidence' "$tester"
+  assert_contains 'Successful verification returns to `parent`' "$tester"
+  assert_contains 'does not perform or replace independent code, architecture, or security review' "$tester"
+  assert_contains 'Do not automatically chain `tester` to `reviewer`' "$global"
+  assert_contains 'alternatives for ordinary changes' "$global"
+  assert_contains 'high-risk and each gate addresses a distinct material uncertainty' "$global"
+  assert_contains 'behavioral compatibility' "$global"
+  assert_contains 'high-risk and the two gates address distinct material uncertainties' "$debugger"
+  assert_contains 'Route successful production work to `tester` for behavioral verification' "$ROOT_DIR/agents/worker.toml"
+  assert_contains '`tester` can serve as the acceptance gate' "$readme"
+  assert_contains 'reviewer only for material non-behavioral risk' "$prompts"
+
+  assert_not_contains '## Verification Result' "$tester"
+  assert_not_contains 'Successful test work normally routes to a fresh `reviewer`' "$tester"
+  assert_not_contains 'route to `tester` and then a fresh `reviewer`' "$debugger"
+  assert_not_contains 'Use both only when their evidence is materially distinct.' "$global"
+}
+
 check_active_legacy_names_are_bounded() {
   local path
   for path in "$ROOT_DIR"/agents/*.toml "$ROOT_DIR/global/AGENTS.md" "$ROOT_DIR/config-snippet.toml" "$ROOT_DIR/project/AGENTS.md.template" "$ROOT_DIR/sample-prompts.md"; do
@@ -238,6 +271,7 @@ bash -n "$INSTALLER"
 bash -n "$SCRIPT_PATH"
 parse_tomls "$ROOT_DIR/agents" "$ROOT_DIR/config-snippet.toml"
 check_documented_runtime_semantics
+check_cost_aware_verification_routing
 check_active_legacy_names_are_bounded
 pass "shell syntax, canonical role contracts, config semantics, and bounded legacy names"
 

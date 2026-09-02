@@ -13,7 +13,7 @@ A deliberately small Codex subagent team optimized for **simple, long-lived, rob
 | `explorer` | GPT-5.6 Terra / high | read-only | Repository facts, execution paths, ownership, impact |
 | `architect` | GPT-5.6 Sol / xhigh | read-only | Minimal durable decisions and implementation packets |
 | `worker` | GPT-5.6 Luna / max | workspace-write | Bounded production-code implementation |
-| `tester` | GPT-5.6 Luna / max | workspace-write | Independent requirement-driven tests; test-only behavior |
+| `tester` | GPT-5.6 Luna / max | workspace-write | Independent behavioral and acceptance verification; test-only writes |
 | `reviewer` | GPT-5.6 Sol / xhigh | read-only | Architecture, code, and acceptance gates |
 | `debugger` | GPT-5.6 Sol / xhigh | workspace-write | Difficult root-cause debugging and minimal fixes |
 | `git_operator` | GPT-5.6 Luna / high | workspace-write | Precise repository-state and Git-history operations |
@@ -101,6 +101,8 @@ Explorer(s)
 ```
 
 For a small obvious change, the primary thread should implement it directly when it already has the necessary context. Use one `worker` only when isolation, restriction, or model-tier savings outweigh the prompt and handoff overhead. For non-trivial work, add exploration, architecture, independent testing, and review conditionally according to uncertainty, reversibility, public-contract impact, regression risk, and acceptance risk; the full pipeline is not the default.
+
+For an ordinary behavior-dominant change, `tester` can serve as the acceptance gate and return its evidence directly to the primary thread. It strengthens verification rather than replacing `reviewer`. For an ordinary structural or non-behavioral risk, use `reviewer` instead. Combine them only when the change is high-risk and each gate resolves a distinct material uncertainty.
 
 ## Handoff design
 

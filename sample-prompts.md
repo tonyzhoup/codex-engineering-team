@@ -6,7 +6,7 @@ Summarize the active engineering-team routing, shared handoff contract, and avai
 
 ## Full feature workflow
 
-Implement <feature>. Preserve the original requirement through every handoff. Use the fewest useful agents: focused explorer work if the path is unclear; architect only if the change crosses a real architecture boundary; a fresh architecture reviewer before implementation; disjoint Luna Max workers only from explicit packets; tester for independent behavioral coverage; and a fresh CODE+ACCEPTANCE reviewer before declaring completion. Do not commit.
+Implement <feature>. Preserve the original requirement through every handoff. Use the fewest useful agents: focused explorer work if the path is unclear; architect only if the change crosses a real architecture boundary; disjoint Luna Max workers only from explicit packets; tester as the acceptance gate for observable behavior; and reviewer only for material non-behavioral risk. Do not automatically chain tester to reviewer; use both only when the change is high-risk and they resolve distinct material uncertainties. Do not commit.
 
 ## Small bug fix
 
@@ -18,7 +18,7 @@ Analyze <change>. Gather only the necessary repository facts, then have architec
 
 ## Difficult debugging
 
-Investigate <failure>. Preserve all existing evidence. Use debugger only after the local cause is not obvious or normal attempts have failed. Require reproduction or the strongest available evidence, tested hypotheses, a proven root cause, the smallest fix, focused validation, and a fresh final reviewer. Do not commit.
+Investigate <failure>. Preserve all existing evidence. Use debugger only after the local cause is not obvious or normal attempts have failed. Require reproduction or the strongest available evidence, tested hypotheses, a proven root cause, the smallest fix, and focused validation. Route the result to tester for behavioral/regression verification or reviewer for material structural risk; use both only when the change is high-risk and they resolve distinct material uncertainties. Do not commit.
 
 ## Commit after final review
 

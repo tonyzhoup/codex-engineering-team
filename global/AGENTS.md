@@ -18,7 +18,7 @@ Project-level `AGENTS.md` files define repository facts, commands, conventions, 
 - `explorer`: establishes repository facts and impact surfaces; read-only.
 - `architect`: makes non-trivial design decisions and produces bounded implementation packets; read-only.
 - `worker`: executes a clear packet or small bounded change; writes production code.
-- `tester`: derives and writes independent high-value tests; does not change production behavior.
+- `tester`: independently verifies observable behavior and acceptance evidence, writes high-value tests when useful, and does not change production behavior.
 - `reviewer`: independent architecture, code, and acceptance gate; read-only and always started fresh for each gate.
 - `debugger`: handles repeated, non-local, intermittent, or root-cause-unclear failures.
 - `git_operator`: manages repository state and history after work is ready and only within explicit Git intent.
@@ -57,9 +57,10 @@ Use the fewest agents that materially improve the result.
 
 1. **Small, obvious, low-risk change**: the primary thread implements it directly when it already has the necessary context. Use one `worker` only when the delegation threshold above is met. Run focused validation; add `tester` or `reviewer` only when the risk warrants it. Skip architecture ceremony.
 2. **Unclear code path or unfamiliar repository area**: one focused `explorer`; use parallel explorers only for genuinely independent areas.
-3. **Non-trivial module boundary, state ownership, public API, persistence, migration, concurrency, lifecycle, or cross-cutting change**: compose only the gates that the task needs. Use `explorer` when the code path or impact is unclear; `architect` when a real boundary or ownership decision is required; a fresh ARCHITECTURE `reviewer` only for high-risk, hard-to-reverse, or public-contract decisions; `worker` packet(s) for implementation; `tester` when independent tests materially reduce regression risk; and a fresh CODE + ACCEPTANCE `reviewer` for medium/high-risk changes or material acceptance uncertainty. The full pipeline is not the default.
-4. **Repeated or non-local failure**: after one focused local correction or two failed implementation/test loops, use `debugger`. Do not let workers thrash through speculative edits.
-5. **Git work**: use `git_operator` only after the intended code state is understood. Commit or push only when requested.
+3. **Ordinary bounded change**: compose only the gates that the task needs. Use `tester` as the acceptance gate when the dominant uncertainty is observable behavior, regression coverage, state transitions, contract outcomes, or behavioral compatibility. Use `reviewer` instead when the dominant risk is structural, architectural, security-sensitive, or cannot be convincingly established through behavioral evidence. Ordinary changes do not run both gates; if the risk is mixed and high, use the next rule.
+4. **Non-trivial or high-risk change**: for a module boundary, state ownership, public API, persistence, migration, concurrency, lifecycle, security, or cross-cutting change, use `explorer` when the path or impact is unclear and `architect` when a real boundary or ownership decision is required. Add `tester` when independent behavioral evidence materially reduces regression or acceptance risk. Add a fresh ARCHITECTURE or CODE + ACCEPTANCE `reviewer` when an independent design/code gate is justified. Use both only when the change is high-risk and each gate addresses a distinct material uncertainty. The full pipeline is not the default.
+5. **Repeated or non-local failure**: after one focused local correction or two failed implementation/test loops, use `debugger`. Do not let workers thrash through speculative edits.
+6. **Git work**: use `git_operator` only after the intended code state is understood. Commit or push only when requested.
 
 ## Handoffs
 
@@ -91,6 +92,10 @@ The architect returns bounded implementation packets and defines their format. P
 The worker must not silently redesign a packet. On an `ARCHITECTURE_BLOCKER`, stop the affected packet and route the evidence back to the architect. Other disjoint packets may continue when safe.
 
 ## Review gates
+
+Do not automatically chain `tester` to `reviewer`. They are alternatives for ordinary changes: `tester` strengthens behavioral and acceptance verification; it does not replace `reviewer`, which evaluates architecture, code, security, and other risks that passing tests cannot establish. Use both only when a change is high-risk and each gate addresses a distinct material uncertainty.
+
+The `tester` returns `PASS`, `FAIL`, or `INCONCLUSIVE` for behavioral verification, with precedence `FAIL` then `INCONCLUSIVE` then `PASS`. Any disproven required behavior means `FAIL`; otherwise, any material criterion lacking sufficient evidence means `INCONCLUSIVE`; otherwise, `PASS` requires sufficient evidence for every material criterion and no remaining production failure or material behavioral risk. A passing verification is not an architecture or code-quality verdict. An inconclusive criterion must route to the parent for a risk decision or to the specialist that can resolve it.
 
 Use a fresh `reviewer` session for each independent gate; a gate is independent only if it starts with a clean context.
 

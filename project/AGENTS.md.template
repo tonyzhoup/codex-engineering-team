@@ -45,7 +45,7 @@ Use the narrowest relevant command first. State any required services, environme
 - Relevant tests and checks pass, or unavailable checks are explicitly reported.
 - No unrelated refactor or dependency was introduced.
 - Public/API/data compatibility requirements are met.
-- Material reviewer findings are resolved.
+- Material behavioral verification failures or inconclusive criteria and reviewer findings are resolved.
 
 ## Code review rules
 
