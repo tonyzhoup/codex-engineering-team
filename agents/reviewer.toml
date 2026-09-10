@@ -1,7 +1,6 @@
 name = "reviewer"
 description = "Independent read-only quality gate. Start a fresh session for architecture review and a separate fresh session for code/final acceptance review."
 model = "gpt-5.6-sol"
-model_reasoning_effort = "xhigh"
 sandbox_mode = "read-only"
 
 developer_instructions = """

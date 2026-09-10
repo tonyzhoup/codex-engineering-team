@@ -2,15 +2,15 @@
 
 ## Verify installation
 
-Summarize the active engineering-team routing, shared handoff contract, and available custom agents. State which global and project instruction files you loaded. Do not edit files.
+Summarize the active engineering-team routing, shared handoff contract, available custom agents, and the high/xhigh selection rules for architect, reviewer, and debugger. State which global and project instruction files you loaded. Do not edit files.
 
 ## Full feature workflow
 
-Implement <feature>. Preserve the original requirement through every handoff. Use the fewest useful agents: focused explorer work if the path is unclear; architect only if the change crosses a real architecture boundary; disjoint Luna Max workers only from explicit packets; tester as the acceptance gate for observable behavior; and reviewer only for material non-behavioral risk. Do not automatically chain tester to reviewer; use both only when the change is high-risk and they resolve distinct material uncertainties. Do not commit.
+Implement <feature>. Preserve the original requirement through every handoff. Use the fewest useful agents: focused explorer work if the path is unclear; architect only if the change crosses a real architecture boundary; disjoint Luna Max workers only from explicit packets; tester as the acceptance gate for observable behavior; and reviewer only for material non-behavioral risk. Pass `reasoning_effort=medium` for architect and `reasoning_effort=high` for reviewer or debugger unless a role-specific escalation condition in the global contract applies. Do not automatically chain tester to reviewer; use both only when the change is high-risk and they resolve distinct material uncertainties. Do not commit.
 
 ## Small bug fix
 
-Fix <bug>. Keep the process proportional: use explorer only if the responsible path is unclear, worker for the smallest fix, tester for a high-value regression test, and reviewer only for material risk. Escalate after repeated/non-local failure rather than making speculative edits. Do not commit.
+Fix <bug>. Keep the process proportional: handle a small obvious fix in the primary thread; use explorer only if the responsible path is unclear and worker only when delegation is worthwhile. Successful workers return to the primary thread; add tester only for remaining behavioral verification needs or reviewer only for material structural risk. Sufficiently validated low-risk work can finish without another agent. Escalate after repeated/non-local failure rather than making speculative edits. Do not commit.
 
 ## Architecture-only task
 

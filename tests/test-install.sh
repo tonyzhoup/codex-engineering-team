@@ -167,11 +167,11 @@ agents_dir = pathlib.Path(sys.argv[1])
 config_path = pathlib.Path(sys.argv[2])
 expected = {
     "explorer": ("gpt-5.6-terra", "high", "read-only"),
-    "architect": ("gpt-5.6-sol", "xhigh", "read-only"),
+    "architect": ("gpt-6-astra", None, "read-only"),
     "worker": ("gpt-5.6-luna", "max", "workspace-write"),
     "tester": ("gpt-5.6-luna", "max", "workspace-write"),
-    "reviewer": ("gpt-5.6-sol", "xhigh", "read-only"),
-    "debugger": ("gpt-5.6-sol", "xhigh", "workspace-write"),
+    "reviewer": ("gpt-5.6-sol", None, "read-only"),
+    "debugger": ("gpt-5.6-sol", None, "workspace-write"),
     "git_operator": ("gpt-5.6-luna", "high", "workspace-write"),
 }
 
@@ -186,7 +186,10 @@ for name, (model, effort, sandbox) in expected.items():
         raise SystemExit(f"{path}: name is {data.get('name')!r}")
     if data.get("model") != model:
         raise SystemExit(f"{path}: model is {data.get('model')!r}")
-    if data.get("model_reasoning_effort") != effort:
+    if effort is None:
+        if "model_reasoning_effort" in data:
+            raise SystemExit(f"{path}: effort must be selected by Main, got {data['model_reasoning_effort']!r}")
+    elif data.get("model_reasoning_effort") != effort:
         raise SystemExit(f"{path}: effort is {data.get('model_reasoning_effort')!r}")
     if data.get("sandbox_mode") != sandbox:
         raise SystemExit(f"{path}: sandbox is {data.get('sandbox_mode')!r}")
@@ -196,8 +199,8 @@ for name, (model, effort, sandbox) in expected.items():
 config = tomllib.loads(config_path.read_text())
 if set(config) != {"model", "model_reasoning_effort", "features", "agents"}:
     raise SystemExit(f"config top-level keys: {set(config)!r}")
-if config["model"] != "gpt-5.6-sol" or config["model_reasoning_effort"] != "max":
-    raise SystemExit("config Main model/effort are not Sol/max")
+if config["model"] != "gpt-6-astra" or config["model_reasoning_effort"] != "xhigh":
+    raise SystemExit("config Main model/effort are not Astra/xhigh")
 if config["features"] != {"multi_agent_v2": True}:
     raise SystemExit(f"config feature settings: {config['features']!r}")
 if set(config["agents"]) != {"enabled", "interrupt_message"}:
@@ -246,13 +249,59 @@ check_cost_aware_verification_routing() {
   assert_contains 'high-risk and each gate addresses a distinct material uncertainty' "$global"
   assert_contains 'behavioral compatibility' "$global"
   assert_contains 'high-risk and the two gates address distinct material uncertainties' "$debugger"
-  assert_contains 'Route successful production work to `tester` for behavioral verification' "$ROOT_DIR/agents/worker.toml"
+  assert_contains 'Every `architect`, `reviewer`, and `debugger` spawn must explicitly set `reasoning_effort`' "$global"
+  assert_contains '`architect`: use `medium` by default' "$global"
+  assert_contains '`reviewer`: use `high` by default' "$global"
+  assert_contains '`debugger`: use `high` by default' "$global"
+  assert_contains 'Never raise reasoning effort merely because the task is labeled high-risk' "$global"
+  assert_contains 'a prior `medium` architecture attempt that left the boundary unresolved' "$global"
+  assert_contains 'a prior `high` review missed a material defect' "$global"
+  assert_contains 'a prior `high` debugger attempt preserved evidence but did not establish the root cause' "$global"
+  assert_contains 'GPT-6 Astra / medium by default, gated high' "$readme"
+  assert_contains 'GPT-5.6 Sol / high by default, gated xhigh' "$readme"
+  assert_contains 'reasoning effort unpinned' "$readme"
+  assert_contains 'Pass `reasoning_effort=medium` for architect' "$prompts"
+  assert_contains '`reasoning_effort=high` for reviewer or debugger' "$prompts"
+  assert_contains 'Architect, reviewer, and debugger leave' "$ROOT_DIR/config-snippet.toml"
+  assert_contains 'Successful production work returns to `parent`' "$ROOT_DIR/agents/worker.toml"
+  assert_contains 'The parent decides whether an additional gate is warranted' "$ROOT_DIR/agents/worker.toml"
+  assert_contains 'sufficient validation of low-risk work does not require another agent' "$ROOT_DIR/agents/worker.toml"
+  assert_contains 'Successful workers return to the primary thread' "$global"
+  assert_contains 'Sufficiently validated low-risk work can finish without another agent' "$readme"
+  assert_contains 'Successful workers return to the primary thread' "$prompts"
+  assert_contains 'add tester only for remaining behavioral verification needs' "$prompts"
+  local contract
+  for contract in "$tester" "$global"; do
+    assert_contains 'Evaluate the current code state using the latest valid evidence and unresolved relevant failures' "$contract"
+    assert_contains 'Keep earlier failures in the report' "$contract"
+    assert_contains 'supported correction and successful relevant revalidation' "$contract"
+    assert_contains 'a passing rerun alone does not resolve possible flakiness' "$contract"
+    assert_contains 'Exclude a failed check from the verdict only with evidence that it is unrelated to required behavior' "$contract"
+    assert_contains 'remains unresolved in the current code state' "$contract"
+    assert_contains 'or any unresolved relevant failure or material behavioral risk remains' "$contract"
+    assert_not_contains 'its impact cannot be determined' "$contract"
+    assert_contains 'final relevant checks pass' "$contract"
+    assert_not_contains 'all executed checks pass' "$contract"
+  done
+  python3 - "$tester" "$global" <<'PY'
+import pathlib
+import sys
+
+def verdict_lines(path):
+    prefixes = ("- `FAIL` when", "- Otherwise, `INCONCLUSIVE` when", "- Otherwise, `PASS` only")
+    return [line for line in pathlib.Path(path).read_text().splitlines() if line.startswith(prefixes)]
+
+tester_rules, global_rules = map(verdict_lines, sys.argv[1:])
+if len(tester_rules) != 3 or tester_rules != global_rules:
+    raise SystemExit("Tester and global verdict rules must match exactly")
+PY
   assert_contains '`tester` can serve as the acceptance gate' "$readme"
   assert_contains 'reviewer only for material non-behavioral risk' "$prompts"
 
   assert_not_contains '## Verification Result' "$tester"
   assert_not_contains 'Successful test work normally routes to a fresh `reviewer`' "$tester"
   assert_not_contains 'route to `tester` and then a fresh `reviewer`' "$debugger"
+  assert_not_contains 'Route successful production work to `tester`' "$ROOT_DIR/agents/worker.toml"
   assert_not_contains 'Use both only when their evidence is materially distinct.' "$global"
 }
 

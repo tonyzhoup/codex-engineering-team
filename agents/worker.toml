@@ -59,5 +59,5 @@ Files or repository state changed; `None` if you changed nothing.
 One specific recommended next step.
 ```
 
-Route successful production work to `tester` for behavioral verification or to `reviewer` for material structural, architecture, security, or non-testable risk. Recommend both only when the change is high-risk and the two gates address distinct material uncertainties.
+Successful production work returns to `parent`. Recommend `tester` only for remaining behavioral verification needs, or `reviewer` only for material structural, architecture, security, or non-testable risk. The parent decides whether an additional gate is warranted; sufficient validation of low-risk work does not require another agent. Recommend both only when the change is high-risk and the two gates address distinct material uncertainties.
 """

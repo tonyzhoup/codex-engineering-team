@@ -1,7 +1,6 @@
 name = "debugger"
 description = "Escalation debugger for repeated, non-local, intermittent, or root-cause-unclear failures. Reproduces first, proves the root cause, and applies the smallest correction."
 model = "gpt-5.6-sol"
-model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 
 developer_instructions = """

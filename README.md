@@ -11,16 +11,16 @@ A deliberately small Codex subagent team optimized for **simple, long-lived, rob
 | Agent | Model / effort | Access | Responsibility |
 |---|---|---|---|
 | `explorer` | GPT-5.6 Terra / high | read-only | Repository facts, execution paths, ownership, impact |
-| `architect` | GPT-5.6 Sol / xhigh | read-only | Minimal durable decisions and implementation packets |
+| `architect` | GPT-6 Astra / medium by default, gated high | read-only | Minimal durable decisions and implementation packets |
 | `worker` | GPT-5.6 Luna / max | workspace-write | Bounded production-code implementation |
 | `tester` | GPT-5.6 Luna / max | workspace-write | Independent behavioral and acceptance verification; test-only writes |
-| `reviewer` | GPT-5.6 Sol / xhigh | read-only | Architecture, code, and acceptance gates |
-| `debugger` | GPT-5.6 Sol / xhigh | workspace-write | Difficult root-cause debugging and minimal fixes |
+| `reviewer` | GPT-5.6 Sol / high by default, gated xhigh | read-only | Architecture, code, and acceptance gates |
+| `debugger` | GPT-5.6 Sol / high by default, gated xhigh | workspace-write | Difficult root-cause debugging and minimal fixes |
 | `git_operator` | GPT-5.6 Luna / high | workspace-write | Precise repository-state and Git-history operations |
 
 The primary Codex thread is the supervisor. There is no permanent supervisor agent and no workflow database.
 
-The seven custom roles keep these per-role model and reasoning pins. The supplied config snippet separately sets the static Main supervisor baseline to GPT-5.6 Sol with `max` reasoning. A task or session may opt into Ultra through the runtime when that choice is available; that is an explicit runtime selection, not a package-wide default. Runtime selection also chooses concurrency per task/session; this package does not set a fixed concurrency limit.
+All seven custom roles pin their model. Explorer, worker, tester, and git operator also pin their reasoning effort. Architect, reviewer, and debugger intentionally leave reasoning effort unpinned so the Main supervisor can select it for the individual task. Architect uses `medium` by default and gated `high`; reviewer and debugger use `high` by default and gated `xhigh`. The supplied config snippet separately sets the static Main supervisor baseline to GPT-6 Astra with `xhigh` reasoning. A task or session may opt into Ultra through the runtime when that choice is available; that is an explicit runtime selection, not a package-wide default. Runtime selection also chooses concurrency per task/session; this package does not set a fixed concurrency limit.
 
 The `worker` and `explorer` files are custom definitions at names that may also exist as built-ins, so the custom files shadow the built-ins wherever Codex gives user custom agents precedence. The `sandbox_mode` values in the table are configured defaults within the parent/runtime permission envelope, not guarantees that the package can override a live parent permission. Read-only roles retain their behavioral no-edit rule; a write role that receives effective read-only access must report `ENVIRONMENT_BLOCKER` instead of editing.
 
@@ -84,7 +84,7 @@ Do not duplicate the global workflow rules in every repository. Keep project ins
 
 Merge `config-snippet.toml` into `~/.codex/config.toml` or a trusted project's `.codex/config.toml`. The package does not overwrite config automatically.
 
-The snippet explicitly selects the official Multi-agent V2 runtime, enables the agent runtime and interrupt messages, and sets only the top-level Main `model` and `model_reasoning_effort` defaults. It intentionally leaves subagent default model/effort keys and concurrency unset because every custom role pins its own model/effort and the runtime chooses concurrency.
+The snippet explicitly selects the official Multi-agent V2 runtime, enables the agent runtime and interrupt messages, and sets only the top-level Main `model` and `model_reasoning_effort` defaults. It intentionally leaves subagent default model/effort keys and concurrency unset: every custom role pins its model, four roles pin effort, and Main must explicitly select `medium` or `high` for architect and `high` or `xhigh` for reviewer and debugger.
 
 ## Intended workflow
 
@@ -102,7 +102,13 @@ Explorer(s)
 
 For a small obvious change, the primary thread should implement it directly when it already has the necessary context. Use one `worker` only when isolation, restriction, or model-tier savings outweigh the prompt and handoff overhead. For non-trivial work, add exploration, architecture, independent testing, and review conditionally according to uncertainty, reversibility, public-contract impact, regression risk, and acceptance risk; the full pipeline is not the default.
 
+Architect uses Astra with `medium` by default and gated `high`. Reviewer and debugger use Sol with `high` by default and gated `xhigh`. Main must select the effort for every spawn using the role-specific irreversible, security, concurrency, cross-component, or prior-insufficient-effort conditions in the global routing contract. A generic high-risk label is insufficient.
+
+Successful workers return to the primary thread, which decides whether remaining risk warrants an additional gate. Sufficiently validated low-risk work can finish without another agent.
+
 For an ordinary behavior-dominant change, `tester` can serve as the acceptance gate and return its evidence directly to the primary thread. It strengthens verification rather than replacing `reviewer`. For an ordinary structural or non-behavioral risk, use `reviewer` instead. Combine them only when the change is high-risk and each gate resolves a distinct material uncertainty.
+
+Tester verdicts use the current code state and unresolved relevant failures. Report earlier failures even after a supported correction and successful revalidation; a passing rerun alone does not resolve possible flakiness. A failed check can be excluded from the verdict only with evidence that it is unrelated to required behavior. Unresolved reproducible behavior defects mean `FAIL`; otherwise, missing evidence or any unresolved relevant failure or material behavioral risk means `INCONCLUSIVE`. `PASS` requires sufficient acceptance evidence, passing final relevant checks, and no unresolved relevant failure or material behavioral risk.
 
 ## Handoff design
 

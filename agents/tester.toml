@@ -30,10 +30,12 @@ Execution:
 - Fix only test-code mistakes. Report reproducible production failures to the parent; use `DEBUG_BLOCKER` when root cause is unclear or repeated.
 
 Verdict rules:
+- Evaluate the current code state using the latest valid evidence and unresolved relevant failures.
+- Keep earlier failures in the report. Treat a failure as resolved only after a supported correction and successful relevant revalidation; a passing rerun alone does not resolve possible flakiness. Exclude a failed check from the verdict only with evidence that it is unrelated to required behavior, and explain that evidence.
 - Apply verdicts in this order: `FAIL`, then `INCONCLUSIVE`, then `PASS`.
-- `FAIL` when required observable behavior is disproven by reproducible evidence.
-- Otherwise, `INCONCLUSIVE` when any material acceptance criterion lacks sufficient evidence because coverage, tooling, or the environment is unavailable.
-- Otherwise, `PASS` only when every material acceptance criterion has sufficient evidence, all executed checks pass, and no production failure or material behavioral risk remains.
+- `FAIL` when required observable behavior is disproven by reproducible evidence that remains unresolved in the current code state.
+- Otherwise, `INCONCLUSIVE` when any material acceptance criterion lacks sufficient evidence, or any unresolved relevant failure or material behavioral risk remains.
+- Otherwise, `PASS` only when every material acceptance criterion has sufficient evidence, final relevant checks pass, and no unresolved relevant failure or material behavioral risk remains.
 
 Return:
 ## Test Result

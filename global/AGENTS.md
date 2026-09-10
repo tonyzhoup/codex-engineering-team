@@ -42,6 +42,11 @@ When you do delegate, explicitly include the original requirement, acceptance cr
 - Named specialists must use `fork_turns="none"` or a positive bounded count of recent turns.
 - Omitting `fork_turns` or using `fork_turns="all"` carries the full parent history, retains the parent agent type and model, and cannot be combined with a specialist agent or model override.
 - Reviewers always use `fork_turns="none"` and receive a self-contained packet containing the original requirement, acceptance criteria, project constraints, artifact/evidence, and relevant handoff.
+- Every `architect`, `reviewer`, and `debugger` spawn must explicitly set `reasoning_effort`; these role files intentionally do not pin an effort.
+  - `architect`: use `medium` by default. Use `high` only for an irreversible migration or data-integrity decision; an authorization or security boundary; concurrency or lifecycle ownership spanning components; a public-contract compatibility decision with high blast radius; or a prior `medium` architecture attempt that left the boundary unresolved.
+  - `reviewer`: use `high` by default. Use `xhigh` only for a security-critical change; irreversible migration, data-integrity, or concurrency behavior; a large cross-module diff with coupled invariants; or evidence that a prior `high` review missed a material defect.
+  - `debugger`: use `high` by default. Use `xhigh` only for a severe non-local or intermittent security, corruption, concurrency, or lifecycle failure spanning components; or when a prior `high` debugger attempt preserved evidence but did not establish the root cause.
+- Never raise reasoning effort merely because the task is labeled high-risk; one of the role-specific conditions must apply.
 
 ### Lifecycle and access
 
@@ -54,6 +59,8 @@ When you do delegate, explicitly include the original requirement, acceptance cr
 ## Proportional routing
 
 Use the fewest agents that materially improve the result.
+
+Successful workers return to the primary thread. It decides whether remaining risk warrants a `tester` or `reviewer`; sufficient validation of low-risk work does not require another agent.
 
 1. **Small, obvious, low-risk change**: the primary thread implements it directly when it already has the necessary context. Use one `worker` only when the delegation threshold above is met. Run focused validation; add `tester` or `reviewer` only when the risk warrants it. Skip architecture ceremony.
 2. **Unclear code path or unfamiliar repository area**: one focused `explorer`; use parallel explorers only for genuinely independent areas.
@@ -95,7 +102,13 @@ The worker must not silently redesign a packet. On an `ARCHITECTURE_BLOCKER`, st
 
 Do not automatically chain `tester` to `reviewer`. They are alternatives for ordinary changes: `tester` strengthens behavioral and acceptance verification; it does not replace `reviewer`, which evaluates architecture, code, security, and other risks that passing tests cannot establish. Use both only when a change is high-risk and each gate addresses a distinct material uncertainty.
 
-The `tester` returns `PASS`, `FAIL`, or `INCONCLUSIVE` for behavioral verification, with precedence `FAIL` then `INCONCLUSIVE` then `PASS`. Any disproven required behavior means `FAIL`; otherwise, any material criterion lacking sufficient evidence means `INCONCLUSIVE`; otherwise, `PASS` requires sufficient evidence for every material criterion and no remaining production failure or material behavioral risk. A passing verification is not an architecture or code-quality verdict. An inconclusive criterion must route to the parent for a risk decision or to the specialist that can resolve it.
+The `tester` returns `PASS`, `FAIL`, or `INCONCLUSIVE` for behavioral verification, with precedence `FAIL` then `INCONCLUSIVE` then `PASS`. Evaluate the current code state using the latest valid evidence and unresolved relevant failures. Keep earlier failures in the report. Treat a failure as resolved only after a supported correction and successful relevant revalidation; a passing rerun alone does not resolve possible flakiness. Exclude a failed check from the verdict only with evidence that it is unrelated to required behavior, and explain that evidence.
+
+- `FAIL` when required observable behavior is disproven by reproducible evidence that remains unresolved in the current code state.
+- Otherwise, `INCONCLUSIVE` when any material acceptance criterion lacks sufficient evidence, or any unresolved relevant failure or material behavioral risk remains.
+- Otherwise, `PASS` only when every material acceptance criterion has sufficient evidence, final relevant checks pass, and no unresolved relevant failure or material behavioral risk remains.
+
+A passing verification is not an architecture or code-quality verdict. An inconclusive criterion must route to the parent for a risk decision or to the specialist that can resolve it.
 
 Use a fresh `reviewer` session for each independent gate; a gate is independent only if it starts with a clean context.
 

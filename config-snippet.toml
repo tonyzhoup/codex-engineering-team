@@ -1,8 +1,9 @@
 # Merge this snippet into ~/.codex/config.toml or a trusted project .codex/config.toml.
-# Custom agent files pin their own models and reasoning efforts.
+# Custom agent files pin their models. Architect, reviewer, and debugger leave
+# reasoning effort to Main: architect uses medium/high; reviewer and debugger use high/xhigh.
 
-model = "gpt-5.6-sol"
-model_reasoning_effort = "max"
+model = "gpt-6-astra"
+model_reasoning_effort = "xhigh"
 
 [features]
 multi_agent_v2 = true
