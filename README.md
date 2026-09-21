@@ -110,9 +110,11 @@ For an ordinary behavior-dominant change, `tester` can serve as the acceptance g
 
 Tester verdicts use the current code state and unresolved relevant failures. Report earlier failures even after a supported correction and successful revalidation; a passing rerun alone does not resolve possible flakiness. A failed check can be excluded from the verdict only with evidence that it is unrelated to required behavior. Unresolved reproducible behavior defects mean `FAIL`; otherwise, missing evidence or any unresolved relevant failure or material behavioral risk means `INCONCLUSIVE`. `PASS` requires sufficient acceptance evidence, passing final relevant checks, and no unresolved relevant failure or material behavioral risk.
 
+Reviewer is optional for local, readily verified changes. Start fresh for an independent gate, but reuse that reviewer for correction rechecks within the same scope. Repeated failures return to Main for reassessment; Main may diagnose directly or delegate to debugger when the investigation benefit exceeds the handoff cost.
+
 ## Handoff design
 
-Every subagent ends with a compact `## Handoff` block containing status, next role, summary, evidence, decisions, changes, risks, blockers, and one next action. The architect additionally emits bounded implementation packets with explicit write surfaces, invariants, acceptance checks, and escalation conditions.
+Every subagent returns a single compact `## Handoff` containing status, next role/action, and role-specific results, evidence, changes, risks, and blockers. Verdicts and architecture packets belong inside that handoff, not in a duplicate report. Default to a fresh context with a minimal complete task packet and artifact references; send only deltas for bounded same-task follow-ups. Delegate by uncertainty, verifiability, and expected whole-task cost. Preserve independent judgment and all material acceptance evidence.
 
 This is intentionally Markdown rather than a JSON workflow schema. It is human-readable, survives model/version changes, and is sufficient for the primary Codex thread to route the next step.
 

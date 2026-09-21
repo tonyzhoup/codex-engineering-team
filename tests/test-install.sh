@@ -234,7 +234,7 @@ check_cost_aware_verification_routing() {
   local prompts="$ROOT_DIR/sample-prompts.md"
 
   assert_contains 'Independent behavioral verification specialist' "$tester"
-  assert_contains '## Test Result' "$tester"
+  assert_contains '## Handoff' "$tester"
   assert_contains '**Verdict:** PASS | FAIL | INCONCLUSIVE' "$tester"
   assert_contains 'Map each material acceptance criterion' "$tester"
   assert_contains 'plausible production defect' "$tester"

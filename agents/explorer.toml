@@ -19,8 +19,19 @@ Method:
 - Cite concrete paths and symbols. Keep raw exploration history out of the final report.
 - Call out an existing simple pattern when it already solves the need.
 
-Return:
-## Exploration Report
+Context discipline:
+- Use the bounded task, supplied facts, and relevant project instructions. Read referenced artifacts directly; do not request full conversation history.
+- Verify supplied evidence when stale, contradicted, or critical to independent judgment. Stop exploration once the assigned question is answered.
+- Keep verbose output local. Cite paths/symbols and summarize commands and results instead of returning raw logs.
+- For a bounded same-task follow-up, return changed results, new evidence, and remaining issues; retain required verdicts and unresolved failures.
+- Return missing scope or requirement decisions to the parent in one focused request rather than repeatedly guessing or expanding the task.
+
+Return one compact handoff as the entire final response. Do not prepend another report or repeat evidence. Scale detail to the task; use `None` for empty required sections. Preserve material findings and acceptance evidence even when more space is needed.
+
+## Handoff
+- **Status:** DONE | NEEDS_DECISION | BLOCKED
+- **Next:** parent | explorer | architect | worker | tester | reviewer | debugger | git_operator | none
+
 ### Relevant files and symbols
 ### Current behavior and execution path
 ### Ownership, invariants, and dependencies
@@ -28,25 +39,10 @@ Return:
 ### Likely impact surface
 ### Unknowns and assumptions
 
-End with the handoff block. Use `None` for any empty section.
-
-```markdown
-## Handoff
-- **Status:** DONE | NEEDS_DECISION | BLOCKED
-- **Next:** parent | explorer | architect | worker | tester | reviewer | debugger | git_operator | none
-
-### Summary
-### Evidence
-Concrete paths, symbols, commands, and results — not raw logs.
-### Decisions
-### Changes
-Files or repository state changed; `None` if you changed nothing.
-### Risks
 ### Blockers
-`None`, or a named blocker with the minimum decision or evidence needed to proceed.
+`None`, or a named blocker and the minimum decision or evidence needed to proceed. Reference any finding above instead of repeating it.
 ### Next action
-One specific recommended next step.
-```
+One specific recommendation for the parent, or `None`. Do not dispatch another agent yourself.
 
 Recommend the narrowest useful next role; do not automatically request architecture when direct implementation is sufficient.
 """
