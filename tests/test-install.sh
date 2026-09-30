@@ -166,13 +166,13 @@ import tomllib
 agents_dir = pathlib.Path(sys.argv[1])
 config_path = pathlib.Path(sys.argv[2])
 expected = {
-    "explorer": ("gpt-5.6-terra", "high", "read-only"),
-    "architect": ("gpt-6-astra", None, "read-only"),
-    "worker": ("gpt-5.6-luna", "max", "workspace-write"),
-    "tester": ("gpt-5.6-luna", "max", "workspace-write"),
-    "reviewer": ("gpt-5.6-sol", None, "read-only"),
-    "debugger": ("gpt-5.6-sol", None, "workspace-write"),
-    "git_operator": ("gpt-5.6-luna", "high", "workspace-write"),
+    "explorer": ("gpt-6-luna", None, "read-only"),
+    "architect": ("gpt-6.1-sol", None, "read-only"),
+    "worker": ("gpt-6-luna", None, "workspace-write"),
+    "tester": ("gpt-6-luna", None, "workspace-write"),
+    "reviewer": ("gpt-6.1-sol", None, "read-only"),
+    "debugger": ("gpt-6.1-sol", None, "workspace-write"),
+    "git_operator": ("gpt-6-luna", None, "workspace-write"),
 }
 
 actual_files = {path.stem for path in agents_dir.glob("*.toml")}
@@ -208,6 +208,24 @@ if set(config["agents"]) != {"enabled", "interrupt_message"}:
 if config["agents"] != {"enabled": True, "interrupt_message": True}:
     raise SystemExit(f"config agent settings: {config['agents']!r}")
 PY
+}
+
+check_context_budgets() {
+  local global="$ROOT_DIR/global/AGENTS.md"
+  assert_contains 'Never omit this parameter' "$global"
+  assert_contains 'initial task packet <= 1,500 tokens' "$global"
+  assert_contains 'follow-up delta <= 500 tokens' "$global"
+  assert_contains 'not runtime-enforced caps' "$global"
+  assert_contains 'Do not use `fork_turns="all"` for routine delegation' "$global"
+  local role
+  for role in "$ROOT_DIR"/agents/*.toml; do
+    assert_contains 'Target <= 1,000 tokens' "$role"
+    assert_contains '<= 2,000 tokens' "$role"
+    assert_contains 'Search before reading' "$role"
+    assert_contains 'recover relevant truncated output' "$role"
+    assert_contains 'never omit material findings' "$role"
+    assert_contains 'omit empty sections' "$role"
+  done
 }
 
 check_documented_runtime_semantics() {
@@ -249,20 +267,15 @@ check_cost_aware_verification_routing() {
   assert_contains 'high-risk and each gate addresses a distinct material uncertainty' "$global"
   assert_contains 'behavioral compatibility' "$global"
   assert_contains 'high-risk and the two gates address distinct material uncertainties' "$debugger"
-  assert_contains 'Every `architect`, `reviewer`, and `debugger` spawn must explicitly set `reasoning_effort`' "$global"
-  assert_contains '`architect`: use `medium` by default' "$global"
-  assert_contains '`reviewer`: use `high` by default' "$global"
-  assert_contains '`debugger`: use `high` by default' "$global"
-  assert_contains 'Never raise reasoning effort merely because the task is labeled high-risk' "$global"
-  assert_contains 'a prior `medium` architecture attempt that left the boundary unresolved' "$global"
-  assert_contains 'a prior `high` review missed a material defect' "$global"
-  assert_contains 'a prior `high` debugger attempt preserved evidence but did not establish the root cause' "$global"
-  assert_contains 'GPT-6 Astra / medium by default, gated high' "$readme"
-  assert_contains 'GPT-5.6 Sol / high by default, gated xhigh' "$readme"
-  assert_contains 'reasoning effort unpinned' "$readme"
-  assert_contains 'Pass `reasoning_effort=medium` for architect' "$prompts"
-  assert_contains '`reasoning_effort=high` for reviewer or debugger' "$prompts"
-  assert_contains 'Architect, reviewer, and debugger leave' "$ROOT_DIR/config-snippet.toml"
+  assert_contains 'All seven specialist TOMLs pin only their models' "$global"
+  assert_contains 'Main decides `reasoning_effort` separately for each spawn' "$global"
+  assert_contains 'passes it explicitly' "$global"
+  assert_contains 'Use a level supported by the selected model and runtime' "$global"
+  assert_contains 'GPT-6.1 Sol / Main selects effort' "$readme"
+  assert_contains 'GPT-6 Luna / Main selects effort' "$readme"
+  assert_contains 'leave reasoning effort unpinned' "$readme"
+  assert_contains 'Select `reasoning_effort` explicitly for each specialist spawn' "$prompts"
+  assert_contains 'All seven specialist files pin their models but leave reasoning effort to Main' "$ROOT_DIR/config-snippet.toml"
   assert_contains 'Successful production work returns to `parent`' "$ROOT_DIR/agents/worker.toml"
   assert_contains 'The parent decides whether an additional gate is warranted' "$ROOT_DIR/agents/worker.toml"
   assert_contains 'sufficient validation of low-risk work does not require another agent' "$ROOT_DIR/agents/worker.toml"
@@ -319,6 +332,7 @@ echo "Checking syntax, TOML contracts, and documentation..."
 bash -n "$INSTALLER"
 bash -n "$SCRIPT_PATH"
 parse_tomls "$ROOT_DIR/agents" "$ROOT_DIR/config-snippet.toml"
+check_context_budgets
 check_documented_runtime_semantics
 check_cost_aware_verification_routing
 check_active_legacy_names_are_bounded

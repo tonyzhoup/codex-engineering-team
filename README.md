@@ -10,17 +10,17 @@ A deliberately small Codex subagent team optimized for **simple, long-lived, rob
 
 | Agent | Model / effort | Access | Responsibility |
 |---|---|---|---|
-| `explorer` | GPT-5.6 Terra / high | read-only | Repository facts, execution paths, ownership, impact |
-| `architect` | GPT-6 Astra / medium by default, gated high | read-only | Minimal durable decisions and implementation packets |
-| `worker` | GPT-5.6 Luna / max | workspace-write | Bounded production-code implementation |
-| `tester` | GPT-5.6 Luna / max | workspace-write | Independent behavioral and acceptance verification; test-only writes |
-| `reviewer` | GPT-5.6 Sol / high by default, gated xhigh | read-only | Architecture, code, and acceptance gates |
-| `debugger` | GPT-5.6 Sol / high by default, gated xhigh | workspace-write | Difficult root-cause debugging and minimal fixes |
-| `git_operator` | GPT-5.6 Luna / high | workspace-write | Precise repository-state and Git-history operations |
+| `explorer` | GPT-6 Luna / Main selects effort | read-only | Repository facts, execution paths, ownership, impact |
+| `architect` | GPT-6.1 Sol / Main selects effort | read-only | Minimal durable decisions and implementation packets |
+| `worker` | GPT-6 Luna / Main selects effort | workspace-write | Bounded production-code implementation |
+| `tester` | GPT-6 Luna / Main selects effort | workspace-write | Independent behavioral and acceptance verification; test-only writes |
+| `reviewer` | GPT-6.1 Sol / Main selects effort | read-only | Architecture, code, and acceptance gates |
+| `debugger` | GPT-6.1 Sol / Main selects effort | workspace-write | Difficult root-cause debugging and minimal fixes |
+| `git_operator` | GPT-6 Luna / Main selects effort | workspace-write | Precise repository-state and Git-history operations |
 
 The primary Codex thread is the supervisor. There is no permanent supervisor agent and no workflow database.
 
-All seven custom roles pin their model. Explorer, worker, tester, and git operator also pin their reasoning effort. Architect, reviewer, and debugger intentionally leave reasoning effort unpinned so the Main supervisor can select it for the individual task. Architect uses `medium` by default and gated `high`; reviewer and debugger use `high` by default and gated `xhigh`. The supplied config snippet separately sets the static Main supervisor baseline to GPT-6 Astra with `xhigh` reasoning. A task or session may opt into Ultra through the runtime when that choice is available; that is an explicit runtime selection, not a package-wide default. Runtime selection also chooses concurrency per task/session; this package does not set a fixed concurrency limit.
+All seven custom roles pin their model and leave reasoning effort unpinned. Main sets `reasoning_effort` explicitly for each spawn based on that task's difficulty and the selected model's supported levels. Without an explicit spawn value, Codex can carry forward a previously resolved effort, so omitting the TOML key alone does not make effort task-aware. The supplied config snippet separately sets the static Main supervisor baseline to GPT-6 Astra with `xhigh` reasoning. Runtime selection also chooses concurrency per task/session; this package does not set a fixed concurrency limit.
 
 The `worker` and `explorer` files are custom definitions at names that may also exist as built-ins, so the custom files shadow the built-ins wherever Codex gives user custom agents precedence. The `sandbox_mode` values in the table are configured defaults within the parent/runtime permission envelope, not guarantees that the package can override a live parent permission. Read-only roles retain their behavioral no-edit rule; a write role that receives effective read-only access must report `ENVIRONMENT_BLOCKER` instead of editing.
 
@@ -84,7 +84,7 @@ Do not duplicate the global workflow rules in every repository. Keep project ins
 
 Merge `config-snippet.toml` into `~/.codex/config.toml` or a trusted project's `.codex/config.toml`. The package does not overwrite config automatically.
 
-The snippet explicitly selects the official Multi-agent V2 runtime, enables the agent runtime and interrupt messages, and sets only the top-level Main `model` and `model_reasoning_effort` defaults. It intentionally leaves subagent default model/effort keys and concurrency unset: every custom role pins its model, four roles pin effort, and Main must explicitly select `medium` or `high` for architect and `high` or `xhigh` for reviewer and debugger.
+The snippet explicitly selects the official Multi-agent V2 runtime, enables the agent runtime and interrupt messages, and sets only the top-level Main `model` and `model_reasoning_effort` defaults. It leaves subagent default model/effort keys and concurrency unset. Main selects effort when spawning each of the seven specialists.
 
 ## Intended workflow
 
@@ -102,7 +102,7 @@ Explorer(s)
 
 For a small obvious change, the primary thread should implement it directly when it already has the necessary context. Use one `worker` only when isolation, restriction, or model-tier savings outweigh the prompt and handoff overhead. For non-trivial work, add exploration, architecture, independent testing, and review conditionally according to uncertainty, reversibility, public-contract impact, regression risk, and acceptance risk; the full pipeline is not the default.
 
-Architect uses Astra with `medium` by default and gated `high`. Reviewer and debugger use Sol with `high` by default and gated `xhigh`. Main must select the effort for every spawn using the role-specific irreversible, security, concurrency, cross-component, or prior-insufficient-effort conditions in the global routing contract. A generic high-risk label is insufficient.
+Main selects effort for every specialist spawn from the assigned task's difficulty, ambiguity, scope, risk, and evidence needs. It may choose a different level for the same role on a later task, or adjust the level as a follow-up becomes simpler or harder. The choice must be supported by the selected model and runtime and proportional to its expected benefit in quality, latency, and cost.
 
 Successful workers return to the primary thread, which decides whether remaining risk warrants an additional gate. Sufficiently validated low-risk work can finish without another agent.
 
@@ -127,3 +127,9 @@ Summarize the active engineering-team routing and handoff rules, then list the a
 ```
 
 Confirm that the response names the seven canonical custom roles and follows the routing/access rules. Then try one real medium-sized feature using a sample prompt from `sample-prompts.md`; record the CLI version and any runtime permission/concurrency choices rather than assuming the package controls them.
+
+### Context transfer budgets
+
+Always pass `fork_turns="none"` explicitly for routine delegation: omitting it inherits full history. Justified recent-history forks normally use 1-2 turns; summarize large logs instead. Initial packets target <= 1,500 tokens, follow-up deltas <= 500, ordinary handoffs <= 1,000, and complex design/review handoffs <= 2,000. Preserve essential evidence and explain necessary overruns. These are soft writing targets, not runtime-enforced caps or cumulative usage limits.
+
+Search first and read bounded excerpts; usually request 2,000-4,000 tokens per tool output. Simple handoffs retain status and required verdicts but may omit empty headings. Main checks decisive evidence without repeating the whole investigation. Static tests protect these documented rules; they do not enforce live message sizes. Evaluate savings using combined parent/child usage, cached input, output, elapsed time, and rework when available; no savings percentage is assumed.

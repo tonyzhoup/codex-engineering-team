@@ -2,11 +2,11 @@
 
 ## Verify installation
 
-Summarize the active engineering-team routing, shared handoff contract, available custom agents, and the high/xhigh selection rules for architect, reviewer, and debugger. State which global and project instruction files you loaded. Do not edit files.
+Summarize the active engineering-team routing, shared handoff contract, available custom agents, and how Main selects reasoning effort for each specialist spawn. State which global and project instruction files you loaded. Do not edit files.
 
 ## Full feature workflow
 
-Implement <feature>. Preserve the original requirement through every handoff. Use the fewest useful agents: focused explorer work if the path is unclear; architect only if the change crosses a real architecture boundary; disjoint Luna Max workers only from explicit packets; tester as the acceptance gate for observable behavior; and reviewer only for material non-behavioral risk. Pass `reasoning_effort=medium` for architect and `reasoning_effort=high` for reviewer or debugger unless a role-specific escalation condition in the global contract applies. Do not automatically chain tester to reviewer; use both only when the change is high-risk and they resolve distinct material uncertainties. Do not commit.
+Implement <feature>. Preserve the original requirement through every handoff. Use the fewest useful agents: focused explorer work if the path is unclear; architect only if the change crosses a real architecture boundary; disjoint workers only from explicit packets; tester as the acceptance gate for observable behavior; and reviewer only for material non-behavioral risk. Select `reasoning_effort` explicitly for each specialist spawn from that subtask's complexity and the selected model's supported levels. Do not automatically chain tester to reviewer; use both only when the change is high-risk and they resolve distinct material uncertainties. Do not commit.
 
 ## Small bug fix
 

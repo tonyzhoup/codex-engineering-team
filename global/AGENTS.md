@@ -33,14 +33,19 @@ Pass relevant conclusions from prior handoffs, not full reports, conversation hi
 
 ### Spawn contract
 
-- Named specialists default to `fork_turns="none"` with a minimal task packet. Use a positive bounded count only when those recent turns are directly needed and cheaper than restating their essential context.
+- Explicitly set `fork_turns="none"` on every spawn by default, with a minimal complete task packet. Never omit this parameter. A justified exception may inherit 1-2 recent turns when cheaper than a packet; summarize instead if those turns contain large logs. Larger bounded forks require a concrete reason. Do not use `fork_turns="all"` for routine delegation.
 - Omitting `fork_turns` or using `fork_turns="all"` carries the full parent history, retains the parent agent type and model, and cannot be combined with a specialist agent or model override.
 - New independent reviewer gates use `fork_turns="none"`. Supply requirements, acceptance criteria, constraints, diff/artifact scope, and evidence references; omit the implementation conversation and persuasive summaries.
-- Every `architect`, `reviewer`, and `debugger` spawn must explicitly set `reasoning_effort`; these role files intentionally do not pin an effort.
-  - `architect`: use `medium` by default. Use `high` only for an irreversible migration or data-integrity decision; an authorization or security boundary; concurrency or lifecycle ownership spanning components; a public-contract compatibility decision with high blast radius; or a prior `medium` architecture attempt that left the boundary unresolved.
-  - `reviewer`: use `high` by default. Use `xhigh` only for a security-critical change; irreversible migration, data-integrity, or concurrency behavior; a large cross-module diff with coupled invariants; or evidence that a prior `high` review missed a material defect.
-  - `debugger`: use `high` by default. Use `xhigh` only for a severe non-local or intermittent security, corruption, concurrency, or lifecycle failure spanning components; or when a prior `high` debugger attempt preserved evidence but did not establish the root cause.
-- Never raise reasoning effort merely because the task is labeled high-risk; one of the role-specific conditions must apply.
+- All seven specialist TOMLs pin only their models: `architect`, `reviewer`, and `debugger` use `gpt-6.1-sol`; `explorer`, `worker`, `tester`, and `git_operator` use `gpt-6-luna`. None pins `model_reasoning_effort`.
+- Main decides `reasoning_effort` separately for each spawn from the assigned task's difficulty, ambiguity, scope, risk, and evidence needs, then passes it explicitly. Do not inherit the parent's effort by omission or assign a fixed effort merely because of the role name. Use a level supported by the selected model and runtime.
+- Reassess effort when the task or evidence changes. For a same-task follow-up, retain the prior setting when it still fits; adjust it when the remaining question becomes simpler or harder. Keep the choice proportional to the expected benefit in quality, latency, and cost.
+
+### Context budgets
+
+- Soft targets for authored transfer content: initial task packet <= 1,500 tokens; follow-up delta <= 500 tokens; ordinary handoff <= 1,000 tokens; complex design/review handoff <= 2,000 tokens. These are approximate writing targets, not runtime-enforced caps or total task budgets. Do not spend tool calls counting tokens.
+- Preserve requirements, acceptance criteria, material findings, and unresolved failures. Remove repeated background and process narration first; briefly explain necessary overruns. Reference existing artifacts with paths/symbols or line locations instead of copying full files or logs. Do not create a handoff file merely to evade these targets.
+- Search before reading; inspect relevant functions or bounded excerpts. Usually request 2,000-4,000 tokens per tool output, increasing only for needed evidence. Filter verbose logs locally and return decisive excerpts; recover relevant truncated evidence instead of treating truncation as success.
+- Main verifies decisive evidence rather than repeating the child's entire investigation. Reuse same-task agents with deltas, but start fresh for unrelated work or independent gates.
 
 ### Lifecycle and access
 
